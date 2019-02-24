@@ -1,0 +1,548 @@
+Alumno: Diego Arturo Morales Gonzalez
+Curso: Diseño de Sistemas Distribuidos
+Grupo: 4CM4
+
+
+Practica 1: Principios de C++
+**********************************
+
+Ejercicio 1
+
+Archivo: Ejercicio1.cpp
+
+#include <iostream>
+using namespace std;
+
+int main(){
+	int n = 0;
+	double r,t;
+
+	cout << "Numero que desea calcular la raiz: ";
+	cin >> n;
+
+	r = static_cast<double>(n);
+	t = 0;
+
+	while(t != r){
+		t = r;
+		r = (static_cast<double>(1)/2) * ((n / r) + r);
+	}
+
+	cout.setf(ios::fixed);
+	cout.setf(ios::showpoint);
+	cout.precision(4);
+	cout << "Raiz de " << n << " es " << r << endl;
+
+}
+
+**********************************
+
+Ejercicio 2
+
+Archivo: Ejercicio2.cpp
+
+#include <iostream>
+using namespace std;
+
+int main(){
+	double t = 0;
+	double h = 0;
+	const double a = 9.81;
+
+	cout << "Tiempo de caida del objeto: ";
+	cin >> t;
+
+	h = (static_cast<double>(1)/2) * a * (t * t);
+
+	cout.setf(ios::fixed);
+	cout.setf(ios::showpoint);
+	cout.precision(4);
+	cout << "La altura del edificio es " << h << endl;
+
+}
+
+**********************************
+
+Ejercicio 3
+
+Archivo: Ejercicio3.cpp
+
+#include <iostream>
+using namespace std;
+
+int main(){
+	int sTot = 0;
+	int s = 0, m = 0, h = 0;
+
+	cout << "Segundos totales: ";
+	cin >> sTot;
+
+	h = sTot / 3600;
+	sTot = (sTot - (3600 * h)); 
+	m = sTot / 60;
+	sTot = sTot - (60 * m); 
+	s = sTot;
+
+	cout << "Equivalente: " << h << " horas, " << m << " minutos, " << s << " segundos " << endl;
+
+}
+
+**********************************
+
+Practica 2: Clases en C++
+
+**********************************
+
+Ejercicio 4
+
+Archivo: Ejercicio1.cpp
+
+#include "Temperatura.h"
+#include <iostream>
+using namespace std;
+
+Temperatura::Temperatura(double k){
+	kelvin = k;
+}
+
+void Temperatura::setTempKelvin(double k){
+	kelvin = k;
+	return;
+}
+
+void Temperatura::setTempFahrenheit(double f){
+	kelvin = (f - 32) * static_cast<double>(5)/9 + 273.15;
+	return;
+}
+
+void Temperatura::setTempCelsius(double c){
+	kelvin = 273.15 + c;
+	return;
+}
+
+void Temperatura::mostrarKelvin(){
+	cout << "Grados Kelvin: " << kelvin << endl;
+	return;
+}
+
+void Temperatura::mostrarFahrenheit(){
+	cout << "Grados Fahrenheit: " << ((kelvin - 273.15) * static_cast<double>(9)/5 + 32)  << endl;
+	return;
+}
+
+void Temperatura::mostrarCelsius(){
+	cout << "Grados Centigrados: " << kelvin - 273.15 << endl;
+	return;
+}
+
+int main(){
+	Temperatura t;
+	t.setTempFahrenheit(36);
+	t.mostrarFahrenheit();
+
+	t.setTempCelsius(50);
+	t.mostrarCelsius();
+
+	t.setTempKelvin(21);
+	t.mostrarKelvin();
+
+}
+
+**********************************
+
+Ejercicio 5
+
+Archivo: Ejercicio2.cpp
+
+#include "Fraccion.h"
+#include <iostream>
+using namespace std;
+
+Fraccion::Fraccion(int num, int den){
+	numerador = num;
+	denominador = den;
+}
+
+void Fraccion::setValores(int num, int den){
+	numerador = num;
+	denominador = den;	
+	return;
+}
+
+int Fraccion::getNumerador(){
+	return numerador;
+}
+
+int Fraccion::getDenominador(){
+	return denominador;
+}
+
+double Fraccion::devolverOperacion(){
+	return (static_cast<double>(numerador)/denominador);
+}
+
+Fraccion Fraccion::devolverOperacionMinima(){
+	Fraccion f_m;
+	int b = 2;
+	while(b <= numerador){
+		if(denominador % b == 0 && numerador % b == 0){
+			denominador = denominador / b;
+			numerador = numerador / b;
+		}else{
+			b++;
+		}
+	}
+	f_m.setValores(numerador,denominador);
+	return f_m;
+}
+
+int main(){
+	Fraccion f;
+	f.setValores(25,15);
+	double res = f.devolverOperacion();
+	cout << res << endl;
+	Fraccion f_m = f.devolverOperacionMinima();
+	cout << f_m.getNumerador() << "/" << f_m.getDenominador() << endl;
+}
+
+**********************************
+
+Archivo: Fraccion.h
+
+#ifndef Fraccion_H_
+#define Fraccion_H_
+class Fraccion{
+private:
+	int numerador;
+	int denominador;
+public:
+	Fraccion(int = 0, int = 0);
+	void setValores(int,int);
+	int getNumerador();
+	int getDenominador();
+	double devolverOperacion();
+	Fraccion devolverOperacionMinima();
+};
+
+#endif
+
+**********************************
+
+Archivo: Temperatura.h
+
+#ifndef TEMPERATURA_H_
+#define TEMPERATURA_H_
+class Temperatura{
+private:
+	double kelvin;
+public:
+	Temperatura(double = 35);
+	void setTempKelvin(double);
+	void setTempFahrenheit(double);
+	void setTempCelsius(double);
+	void mostrarKelvin();
+	void mostrarFahrenheit();
+	void mostrarCelsius();
+};
+
+#endif
+
+**********************************
+
+Practica 4: Composicion en C++
+
+**********************************
+
+Ejercicio 6
+
+Archivo: Makefile
+
+prac_compo: prac_compo.cpp Ortoedro.o
+	g++ prac_compo.cpp Ortoedro.o Rectangulo.o Coordenada.o -o prac_compo
+Ortoedro.o: Ortoedro.cpp Rectangulo.o Ortoedro.h
+	g++ Ortoedro.cpp -c
+Rectangulo.o: Rectangulo.cpp Coordenada.o Rectangulo.h
+	g++ Rectangulo.cpp -c
+Coordenada.o: Coordenada.cpp Coordenada.h
+	g++ Coordenada.cpp -c
+
+**********************************
+
+Archivo: Coordenada.cpp
+
+#include "Rectangulo.h"
+#include "Coordenada.h"
+#include <iostream>
+using namespace std;
+
+Coordenada::Coordenada(double xx, double yy, double zz) : x(xx), y(yy), z(zz){
+	
+}
+
+double Coordenada::obtenerX(){
+	return x;
+}
+
+double Coordenada::obtenerY(){
+	return y;
+}
+
+double Coordenada::obtenerZ(){
+	return z;
+}
+
+void Coordenada::setX(double xx){
+	x = xx;
+}
+
+void Coordenada::setY(double yy){
+	y = yy;
+}
+
+void Coordenada::setZ(double zz){
+	y = zz;
+}
+
+**********************************
+
+Archivo: Coordenada.h
+
+#ifndef COORDENADA_H_
+#define COORDENADA_H_
+
+class Coordenada{
+private:
+	double x;
+	double y;
+	double z;
+public:
+	Coordenada(double = 0, double = 0, double = 0);
+	double obtenerX();
+	double obtenerY();
+	double obtenerZ();
+	void setX(double xx);
+	void setY(double yy);
+	void setZ(double zz);
+};
+#endif
+
+**********************************
+
+Archivo: Rectangulo.cpp
+
+#include "Rectangulo.h"
+#include "Coordenada.h"
+#include <iostream>
+#include <cmath>
+using namespace std;
+
+Rectangulo::Rectangulo():superiorIzq(0,0,0), inferiorDer(0,0,0){
+
+}
+
+Rectangulo::Rectangulo(double xSupIzq, double ySupIzq, double zSupIzq, double xInfDer, double yInfDer, double zInfDer):superiorIzq(xSupIzq,ySupIzq,zSupIzq), inferiorDer(xInfDer, yInfDer,zInfDer){
+
+}
+
+Rectangulo::Rectangulo(Coordenada c1, Coordenada c2):superiorIzq(c1),inferiorDer(c2){
+
+}
+
+double Rectangulo::obtieneArea(){
+	double ancho, alto;
+	alto = superiorIzq.obtenerY() - inferiorDer.obtenerY();
+	ancho = inferiorDer.obtenerX() - superiorIzq.obtenerX();
+	return (ancho*alto);
+}
+
+void Rectangulo::imprimeEsq(){
+	cout << "Vertice: (" << superiorIzq.obtenerX() << "," << superiorIzq.obtenerY() << "," << superiorIzq.obtenerZ() << ")" << endl;
+	cout << "Vertice: (" << inferiorDer.obtenerX() << "," << inferiorDer.obtenerY() << "," << inferiorDer.obtenerZ() << ")" << endl;
+}
+
+Coordenada Rectangulo::obtieneSupIzq(){
+	return superiorIzq;
+}
+
+Coordenada Rectangulo::obtieneInfDer(){
+	return inferiorDer;
+}
+
+**********************************
+
+Archivo: Rectangulo.h
+
+#ifndef RECTANGULO_H_
+#define RECTANGULO_H_
+
+#include "Coordenada.h"
+
+class Rectangulo{
+private:
+	Coordenada superiorIzq;
+	Coordenada inferiorDer;
+public:
+	Rectangulo();
+	Rectangulo(double xSupIzq, double ySupIzq, double zSupIzq, double xInfDer, double yInfDer, double zInfDer);
+	Rectangulo(Coordenada c1, Coordenada c2);
+	double obtieneArea();
+	void imprimeEsq();
+	void imprimeEsqPolar();
+	Coordenada obtieneSupIzq();
+	Coordenada obtieneInfDer();
+};
+#endif
+
+**********************************
+
+Archivo: Ortoedro.cpp
+
+#include "Rectangulo.h"
+#include "Coordenada.h"
+#include "Ortoedro.h"
+
+#include <iostream>
+#include <cmath>
+using namespace std;
+
+Ortoedro::Ortoedro():CA(0,0,0),CH(0,0,0){
+
+}
+
+Ortoedro::Ortoedro(Coordenada c1, Coordenada c2):CA(c1),CH(c2){
+	rectangulo[0] = Rectangulo(Coordenada(CA.obtenerX(),CH.obtenerY(),CH.obtenerZ()),CA); //Cara A
+	rectangulo[1] = Rectangulo(Coordenada(CA.obtenerX(),CA.obtenerY(),CH.obtenerZ()),Coordenada(CH.obtenerX(),CA.obtenerY(),CA.obtenerZ())); //Cara B
+	rectangulo[2] = Rectangulo(Coordenada(CA.obtenerX(),CH.obtenerY(),CH.obtenerZ()),Coordenada(CH.obtenerX(),CA.obtenerY(),CH.obtenerZ())); //Cara C
+	rectangulo[3] = Rectangulo(Coordenada(CA.obtenerX(),CH.obtenerY(),CA.obtenerZ()),Coordenada(CH.obtenerX(),CA.obtenerY(),CA.obtenerZ())); //Cara D
+	rectangulo[4] = Rectangulo(CH,Coordenada(CA.obtenerX(),CH.obtenerY(),CA.obtenerZ())); //Cara E
+	rectangulo[5] = Rectangulo(Coordenada(CH.obtenerX(),CA.obtenerY(),CH.obtenerZ()),Coordenada(CH.obtenerX(),CH.obtenerY(),CA.obtenerZ())); //Cara F
+}
+
+void Ortoedro::obtieneVerticesOr(){
+	rectangulo[0].imprimeEsq();
+	rectangulo[1].imprimeEsq();
+	rectangulo[4].imprimeEsq();
+	rectangulo[5].imprimeEsq();
+}
+
+void Ortoedro::obtieneAreaOr(){
+	double areaBase = rectangulo[2].obtieneArea();
+	cout << "El area de la superficie es: " << areaBase << endl;
+}
+
+void Ortoedro::obtieneVolumenOr(){
+	double vol = rectangulo[2].obtieneArea()*(CH.obtenerZ()-CA.obtenerZ());
+	cout << "El volumen del Ortoedro es: " << vol << endl;
+}
+
+void Ortoedro::imprimeEsqOr(){
+	cout << "CA(x) = " << CA.obtenerX() << " CA(y) = " << CA.obtenerY() << " CA(z) = " << CA.obtenerZ() << endl;
+	cout << "CH(x) = " << CH.obtenerX() << " CH(y) = " << CH.obtenerY() << " CH(z) = " << CH.obtenerZ() << endl;
+}
+
+**********************************
+
+Archivo: Ortoedro.h
+
+#ifndef ORTOEDRO_H_
+#define ORTOEDRO_H_
+
+#include "Rectangulo.h"
+#include "Coordenada.h"
+
+class Ortoedro{
+private:
+	Rectangulo rectangulo[6];
+	Coordenada CA,CH;
+public:
+	Ortoedro();
+	Ortoedro(Coordenada c1, Coordenada c2);
+	void obtieneVerticesOr();
+	void obtieneAreaOr();
+	void obtieneVolumenOr();
+	void imprimeEsqOr();
+};
+#endif
+
+**********************************
+
+Archivo: prac_compo.cpp
+
+#include "Rectangulo.h"
+#include "Coordenada.h"
+#include "Ortoedro.h"
+#include <iostream>
+using namespace std;
+
+int main(){
+	//Rectangulo rectangulo1(2,3,5,1);
+	
+	//Coordenadas Rectangulares
+	Coordenada CA(1,4,7);
+	Coordenada CH(2,5,8);
+	Ortoedro ortoedro(CA,CH);
+	
+	ortoedro.obtieneVerticesOr();
+	ortoedro.obtieneAreaOr();
+	ortoedro.obtieneVolumenOr();
+
+	return 0;
+}
+
+**********************************
+
+Practica 6: STL iteradores y algoritmos
+
+**********************************
+
+Ejercicio 7
+
+Archivo: Criba_num_primos.cpp
+
+#include <iostream>
+using namespace std;
+
+void imprimir(bool vec[],int num){
+  cout << "\nLos numeros primos son: " << endl;
+  for(int l=2;l<=num;l++){
+    if(vec[l] == true){
+      cout << l << endl;
+    }
+  }
+}
+
+void calcularPrimos(bool* vec, int num){
+  int j=0,k=0;
+
+  for(int ini=2;ini<=num;ini++){
+    j = 2 * ini;
+    k = 3 * ini;
+    if(j<=num && j%2==0){
+      vec[j] = false;
+    }
+    if(k<=num && k%2==1) {
+      vec[k] = false;
+    }
+  }
+}
+
+void iniciarVect(bool* vec,int num){
+  for(int i=1;i<num;i++){
+    vec[i] = true;
+  }
+}
+
+int main(){
+  int num,i,ini,l;
+
+  cout << "Ingresa un numero: " << endl;
+  cin >> num;
+  
+  bool vec[num];
+
+  iniciarVect(&vec[0],num);
+  calcularPrimos(&vec[0],num);
+  imprimir(vec,num);
+
+  return 0;
+}
