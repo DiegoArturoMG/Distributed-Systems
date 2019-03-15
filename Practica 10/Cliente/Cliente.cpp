@@ -2,8 +2,12 @@
 
 using namespace std;
 
-int main(int argc, char const *argv[]){
-	SocketDatagrama socket = SocketDatagrama(0);
+int main(int argc, char *argv[]){
+    int num = atoi(argv[1]);
+
+    
+    
+    SocketDatagrama socket = SocketDatagrama(0);
     int numeros[2];
     numeros[0] = 5;
     numeros[1] = 3;
