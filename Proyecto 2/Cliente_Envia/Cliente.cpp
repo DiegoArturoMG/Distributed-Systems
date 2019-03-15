@@ -3,18 +3,23 @@
 using namespace std;
 
 #define puerto 7300
-#define MAX_HILOS 10
+#define MAX_HILOS 2
+
+const char *argumento;
 
 PaqueteDatagrama enviarDat(char* valor){
     return PaqueteDatagrama(valor, sizeof(int),"127.0.0.1", puerto);
 }
 
-void enviar(const char ){
+void * enviar(void *){
+
+    printf("Hilo: %u\n",pthread_self());
+
     SocketDatagrama socket = SocketDatagrama(puerto);
     int numeros[1],val=1;
     numeros[0] = val;
     //Convertimos de char* a int
-    long n = strtol(argv[1], NULL, 10);
+    long n = strtol(argumento, NULL, 10);
 
     do{
         PaqueteDatagrama datagramaEnvia = enviarDat((char*)numeros);
@@ -32,26 +37,24 @@ void enviar(const char ){
 
     }while(numeros[0] <= n);
 
-}
 
-void recibir(){
+    sleep(3);
+    pthread_exit(0);
 
 }
 
 int main(int argc, char const *argv[]){
+    
+    argumento = argv[1];
+
     int i;
     pthread_attr_t atributos;
     pthread_t thid[MAX_HILOS];
 
-    pthread_attr_init($atributos);
+    pthread_attr_init(&atributos);
     pthread_attr_setdetachstate(&atributos,PTHREAD_CREATE_DETACHED);
 
-    pthread_create(&thid[0],&atributos,(void *) enviar,NULL);
-    pthread_create(&thid[1],&atributos,(void *) recibir,NULL);
-
-
+    pthread_create(&thid[0],&atributos,enviar,NULL);
 
     sleep(6);    
-
-    return 0;
 }

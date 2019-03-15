@@ -11,8 +11,8 @@ int main(int argc, char const *argv[]){
 	    socket.recibe(datagrama);
 	    numeros = (int *) datagrama.obtieneDatos();
 	    
-	    int * resultado = (int *)malloc(sizeof(int));
-	    *resultado = numeros[0] + numeros[1];
+	    int resultado[1];
+	    resultado[0] = numeros[0] + numeros[1];
 	    cout << "Se ha establecido conexion:" << endl;
 	    cout << "Cliente: " << datagrama.obtieneDireccion() << endl;
 	    cout << "Puerto: " << datagrama.obtienePuerto() << endl;
