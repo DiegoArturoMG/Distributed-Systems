@@ -11,7 +11,7 @@ PaqueteDatagrama enviarDat(char* valor){
     return PaqueteDatagrama(valor, sizeof(int),"127.0.0.1", puerto);
 }
 
-void * enviar(void *){
+void * enviar(void * ch[]){
 
     printf("Hilo: %u\n",pthread_self());
 
@@ -54,7 +54,7 @@ int main(int argc, char const *argv[]){
     pthread_attr_init(&atributos);
     pthread_attr_setdetachstate(&atributos,PTHREAD_CREATE_DETACHED);
 
-    pthread_create(&thid[0],&atributos,enviar,NULL);
+    pthread_create(&thid[0],&atributos,enviar,*argv[1]);
 
     sleep(6);    
 }
