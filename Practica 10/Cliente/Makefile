@@ -1,5 +1,5 @@
 Cliente: Cliente.cpp PaqueteDatagrama.o SocketDatagrama.o
-	g++ Cliente.cpp PaqueteDatagrama.o SocketDatagrama.o -o Cliente
+	g++ Cliente.cpp PaqueteDatagrama.o SocketDatagrama.o -pthread -o Cliente
 SocketDatagrama.o: SocketDatagrama.cpp PaqueteDatagrama.o SocketDatagrama.h
 	g++ SocketDatagrama.cpp -c
 PaqueteDatagrama.o: PaqueteDatagrama.cpp PaqueteDatagrama.h
