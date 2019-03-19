@@ -39,11 +39,16 @@ void * recibir(void *){
         }else{
             //cout << "Se esperaba: " << identificador << endl;
             //cout << "Se recibio: " << *respuesta << endl;
-            val[0] = identificador;
-            identificador++;
-            PaqueteDatagrama datagramaEnvia = enviarDat((char*)val);
-            socket.envia(datagramaEnvia);
-            //cout << "Se ha regresado paquete fallido" << endl;
+
+            //Se debe calcular grupo de paquetes que no estan llegando
+            for(int i=identificador;i<(*respuesta);i++){
+                val[0] = i;
+                identificador = (*respuesta+1);
+                PaqueteDatagrama datagramaEnvia = enviarDat((char*)val);
+                socket.envia(datagramaEnvia);
+                //cout << "Se ha regresado paquete fallido" << endl;
+            }
+
         }
 
     }
