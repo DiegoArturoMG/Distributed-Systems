@@ -1,0 +1,562 @@
+/*Cliente Envia*/
+
+**********************************
+Cliente.cpp
+**********************************
+
+#include "SocketDatagrama.h"
+
+using namespace std;
+
+#define puerto 7300
+#define puerto2 7400
+#define MAX_HILOS 2
+
+PaqueteDatagrama enviarDat(char* valor){
+    return PaqueteDatagrama(valor, sizeof(int),"127.0.0.1", puerto);
+}
+
+void * enviar(void * arg){
+
+    int *argumento = (int *) arg;
+
+    SocketDatagrama socket = SocketDatagrama(puerto);
+    int numeros[1],val=1;
+    numeros[0] = val;
+    //Convertimos de char* a int
+    long n = (long int)*argumento;
+
+    //cout << n << endl;
+
+    do{
+        //cout << "Se envia paquete" << endl;
+        PaqueteDatagrama datagramaEnvia = enviarDat((char*)numeros);
+        socket.envia(datagramaEnvia);
+        //cout << "Se ha enviado paquete" << endl;
+        val++;
+        numeros[0] = val;
+
+        //Se envia el ultimo paquete que seria el valor 0
+        if(val > n){
+            int num[1];
+            num[0] = 0;
+            PaqueteDatagrama datagramaEnvia = enviarDat((char*) num);
+            socket.envia(datagramaEnvia);
+            //cout << "Se han enviado todos los paquetes" << endl;
+        }
+
+    }while(numeros[0] <= n);
+
+    //sleep(3);
+    //pthread_exit(0);
+
+}
+
+void imprimirPaquetesPerdidos(int * paquetesP, int cant, long n){
+    cout << "Pauqetes perdidos: " << cant << endl;
+    for(int i=0;i<cant;i++){
+        cout << *paquetesP++ << endl;
+    }
+    double result = (100.00 - ((cant*100.00)/n));
+    cout << "Porcentaje de paquetes enviados: " << result << endl;
+}
+
+void * recibir(void * arg){
+
+    int *argumento = (int *) arg;
+    long n = (long int)*argumento;
+
+    SocketDatagrama socket = SocketDatagrama(puerto2);
+    int * paquetes_perdidos = NULL;
+    int cant = 2,cant_aux=0;
+
+    paquetes_perdidos = (int *)malloc(1*sizeof(int));
+
+    cout << "Esperando respuesta de Servidor..." << endl;
+
+    while(1){
+
+        PaqueteDatagrama datagramaRecibe =  PaqueteDatagrama(sizeof(int));
+        socket.recibe(datagramaRecibe);
+
+        paquetes_perdidos = (int *)realloc(paquetes_perdidos,cant*sizeof(int));
+
+        int * respuesta = (int*)datagramaRecibe.obtieneDatos();
+
+        //cout << "Llego paquete perdido: " << *respuesta << endl;
+        if(*respuesta == 0){
+            //cout << "Se ha terminado envio de paquetes" << endl;
+            imprimirPaquetesPerdidos(&paquetes_perdidos[0],cant_aux,n);
+            exit(1);
+        }else{
+            paquetes_perdidos[cant_aux] = *respuesta;
+            cant_aux++;cant++;
+        }
+
+    }
+
+    //sleep(3);
+    //pthread_exit(0);
+}
+
+int main(int argc, char const *argv[]){
+
+    //Se le envia parametro por consola
+    long conv = atoi(argv[1]);
+
+    int i;
+    pthread_attr_t atributos;
+    pthread_t thid[MAX_HILOS];
+
+    pthread_attr_init(&atributos);
+    pthread_attr_setdetachstate(&atributos,PTHREAD_CREATE_DETACHED);
+
+    pthread_create(&thid[0],&atributos,enviar,&conv);
+    pthread_create(&thid[1],&atributos,recibir,&conv);
+
+    sleep(1000); 
+
+    return 0;   
+}
+
+**********************************
+PaqueteDatagrama.cpp
+**********************************
+
+#include "PaqueteDatagrama.h"
+
+using namespace std;
+
+PaqueteDatagrama::PaqueteDatagrama(char *dat, unsigned int lon, char * ipDir, int puert){
+	datos = new char[lon];
+	memcpy(datos, dat, sizeof(char)*lon);
+    memcpy(ip, ipDir, sizeof(char)*16);
+    longitud = lon;
+    puerto = puert;
+}
+
+PaqueteDatagrama::PaqueteDatagrama(unsigned int lon){
+	datos = new char[lon];
+	longitud = lon;
+}
+
+PaqueteDatagrama::~PaqueteDatagrama(){
+	delete(datos);
+}
+
+char * PaqueteDatagrama::obtieneDireccion(){
+	return ip;
+}
+
+unsigned int PaqueteDatagrama::obtieneLongitud(){
+	return longitud;
+}
+
+int PaqueteDatagrama::obtienePuerto(){
+	return puerto;
+}
+
+char * PaqueteDatagrama::obtieneDatos(){
+	return datos;
+}
+
+void PaqueteDatagrama::inicializaPuerto(int puert){
+	puerto = puert;
+}
+
+void PaqueteDatagrama::inicializaIp(char * ipDir){
+	memcpy(ip, ipDir, sizeof(char)*16);
+}
+
+void PaqueteDatagrama::inicializaDatos(char * dat){
+	memcpy(datos, dat, longitud);
+}
+
+**********************************
+PaqueteDatagrama.h
+**********************************
+
+#define PAQUETE_DATAGRAMA_H_
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <strings.h>
+
+class PaqueteDatagrama
+{
+public:
+	PaqueteDatagrama(char *, unsigned int, char *, int);
+	PaqueteDatagrama(unsigned int);
+	~PaqueteDatagrama();
+	char *obtieneDireccion();
+	unsigned int obtieneLongitud();
+	int obtienePuerto();
+	char *obtieneDatos();
+	void inicializaPuerto(int);
+	void inicializaIp(char *);
+	void inicializaDatos(char *);
+private:
+	char *datos; 			//Almacena datos
+	char ip[16];			//Almacena la IP
+	unsigned int longitud; 	//Almacena la longitud de la cadena de datos
+	int puerto; 			//Almacena el puerto	
+};
+
+**********************************
+SocketDatagrama.cpp
+**********************************
+
+#include "SocketDatagrama.h"
+
+using namespace std;
+
+SocketDatagrama::SocketDatagrama(int puerto){
+	s = socket(AF_INET, SOCK_DGRAM, 0);
+   //socket(dominio, tipo, protocolo)
+
+   /* se asigna una direccion al socket del servidor*/
+   bzero((char *)&direccionLocal, sizeof(direccionLocal));
+   direccionLocal.sin_family = AF_INET;
+   direccionLocal.sin_addr.s_addr = INADDR_ANY;
+   direccionLocal.sin_port = htons(puerto);
+
+   bind(s, (struct sockaddr *)&direccionLocal, sizeof(direccionLocal));
+}
+
+SocketDatagrama::~SocketDatagrama(){
+	close(s);
+}
+
+int SocketDatagrama::recibe(PaqueteDatagrama &paquete){
+	char datos[paquete.obtieneLongitud()];
+   char aux[INET_ADDRSTRLEN];
+   socklen_t clilen = sizeof(direccionForanea);
+   int i = recvfrom(s, datos, paquete.obtieneLongitud(), 0, (struct sockaddr *) &direccionForanea, &clilen);
+   inet_ntop(AF_INET, &(direccionForanea.sin_addr), aux, INET_ADDRSTRLEN);
+   paquete.inicializaPuerto(ntohs(direccionForanea.sin_port));
+   paquete.inicializaIp(aux);
+   paquete.inicializaDatos(datos);
+	return i; 
+}
+
+int SocketDatagrama::envia(PaqueteDatagrama &paquete){
+   bzero((char *)&direccionForanea, sizeof(direccionForanea));
+   direccionForanea.sin_family = AF_INET;
+   direccionForanea.sin_addr.s_addr = inet_addr(paquete.obtieneDireccion());
+   direccionForanea.sin_port = htons(paquete.obtienePuerto());
+	
+	return sendto(s, paquete.obtieneDatos(), paquete.obtieneLongitud(), 0, (struct sockaddr *) &direccionForanea, sizeof(direccionForanea));
+}
+
+**********************************
+SocketDatagrama.h
+**********************************
+
+#define SOCKET_DATAGRAMA_H_
+
+#include "PaqueteDatagrama.h"
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <string.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <stdio.h>
+#include <string>
+#include <unistd.h>
+#include <iostream>
+#include <pthread.h>
+
+class SocketDatagrama
+{
+public:
+	SocketDatagrama(int);
+	~SocketDatagrama();
+	//Recibe un paquete tipo datagrama proveniente de este socket
+	int recibe(PaqueteDatagrama & paquete);
+	//Envia un paquete tipo datagrama desde este socket 
+	int envia(PaqueteDatagrama & paquete);
+private:
+	struct sockaddr_in direccionLocal;
+	struct sockaddr_in direccionForanea;
+	int s; //ID socket
+};
+
+**********************************
+Makefile
+**********************************
+
+Cliente_Envia: Cliente.cpp PaqueteDatagrama.o SocketDatagrama.o
+	g++ Cliente.cpp PaqueteDatagrama.o SocketDatagrama.o -pthread -o Cliente_Envia
+SocketDatagrama.o: SocketDatagrama.cpp PaqueteDatagrama.o SocketDatagrama.h
+	g++ SocketDatagrama.cpp -c
+PaqueteDatagrama.o: PaqueteDatagrama.cpp PaqueteDatagrama.h
+	g++ PaqueteDatagrama.cpp -c
+
+
+**************************************************************************************************************************************************************************************************************************
+
+/*Cliente Recibe*/
+
+**********************************
+Cliente.cpp
+**********************************
+
+#include "SocketDatagrama.h"
+
+using namespace std;
+
+#define puerto 7300
+#define puerto2 7400
+#define MAX_HILOS 2
+
+PaqueteDatagrama enviarDat(char* valor){
+    return PaqueteDatagrama(valor, sizeof(int),"127.0.0.1", puerto2);
+}
+
+void * recibir(void *){
+
+    SocketDatagrama socket = SocketDatagrama(puerto);
+        
+    int identificador=1;
+    int val[1];
+
+    cout << "Esperando clientes..." << endl;
+
+    while(1){
+        //cout << "Se espera paquete" << endl;
+        PaqueteDatagrama datagramaRecibe =  PaqueteDatagrama(sizeof(int));
+        socket.recibe(datagramaRecibe);
+        //cout << "Se recibe paquete" << endl;
+        int * respuesta = (int*)datagramaRecibe.obtieneDatos();
+
+        if(identificador == *respuesta){
+            //cout << "Se ha recibido correctamente: " << *respuesta << endl;
+            identificador++;
+        }else if(*respuesta == 0){
+            //cout << "Se ha recibido paquete 0" << endl;
+            val[0] = 0;
+            PaqueteDatagrama datagramaEnvia = enviarDat((char*)val);
+            socket.envia(datagramaEnvia);
+            //cout << "Se ha regresado paquete 0" << endl;
+            identificador = 1;
+        }else{
+            //cout << "Se esperaba: " << identificador << endl;
+            //cout << "Se recibio: " << *respuesta << endl;
+
+            //Se debe calcular grupo de paquetes que no estan llegando
+            for(int i=identificador;i<(*respuesta);i++){
+                val[0] = i;
+                identificador = (*respuesta+1);
+                PaqueteDatagrama datagramaEnvia = enviarDat((char*)val);
+                socket.envia(datagramaEnvia);
+                //cout << "Se ha regresado paquete fallido" << endl;
+            }
+
+        }
+
+    }
+
+    //sleep(3);
+    //pthread_exit(0);
+}
+
+int main(int argc, char const *argv[]){
+
+    int i;
+    pthread_attr_t atributos;
+    pthread_t thid[MAX_HILOS];
+
+    pthread_attr_init(&atributos);
+    pthread_attr_setdetachstate(&atributos,PTHREAD_CREATE_DETACHED);
+
+    pthread_create(&thid[0],&atributos,recibir,NULL);
+
+    sleep(10000);    
+
+    return 0;
+}
+
+**********************************
+PaqueteDatagrama.cpp
+**********************************
+
+#include "PaqueteDatagrama.h"
+
+using namespace std;
+
+PaqueteDatagrama::PaqueteDatagrama(char *dat, unsigned int lon, char * ipDir, int puert){
+	datos = new char[lon];
+	memcpy(datos, dat, sizeof(char)*lon);
+    memcpy(ip, ipDir, sizeof(char)*16);
+    longitud = lon;
+    puerto = puert;
+}
+
+PaqueteDatagrama::PaqueteDatagrama(unsigned int lon){
+	datos = new char[lon];
+	longitud = lon;
+}
+
+PaqueteDatagrama::~PaqueteDatagrama(){
+	delete(datos);
+}
+
+char * PaqueteDatagrama::obtieneDireccion(){
+	return ip;
+}
+
+unsigned int PaqueteDatagrama::obtieneLongitud(){
+	return longitud;
+}
+
+int PaqueteDatagrama::obtienePuerto(){
+	return puerto;
+}
+
+char * PaqueteDatagrama::obtieneDatos(){
+	return datos;
+}
+
+void PaqueteDatagrama::inicializaPuerto(int puert){
+	puerto = puert;
+}
+
+void PaqueteDatagrama::inicializaIp(char * ipDir){
+	memcpy(ip, ipDir, sizeof(char)*16);
+}
+
+void PaqueteDatagrama::inicializaDatos(char * dat){
+	memcpy(datos, dat, longitud);
+}
+
+**********************************
+PaqueteDatagrama.h
+**********************************
+
+#define PAQUETE_DATAGRAMA_H_
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <strings.h>
+
+class PaqueteDatagrama
+{
+public:
+	PaqueteDatagrama(char *, unsigned int, char *, int);
+	PaqueteDatagrama(unsigned int);
+	~PaqueteDatagrama();
+	char *obtieneDireccion();
+	unsigned int obtieneLongitud();
+	int obtienePuerto();
+	char *obtieneDatos();
+	void inicializaPuerto(int);
+	void inicializaIp(char *);
+	void inicializaDatos(char *);
+private:
+	char *datos; 			//Almacena datos
+	char ip[16];			//Almacena la IP
+	unsigned int longitud; 	//Almacena la longitud de la cadena de datos
+	int puerto; 			//Almacena el puerto	
+};
+
+**********************************
+SocketDatagrama.cpp
+**********************************
+
+#include "SocketDatagrama.h"
+
+using namespace std;
+
+SocketDatagrama::SocketDatagrama(int puerto){
+	s = socket(AF_INET, SOCK_DGRAM, 0);
+   //socket(dominio, tipo, protocolo)
+
+   /* se asigna una direccion al socket del servidor*/
+   bzero((char *)&direccionLocal, sizeof(direccionLocal));
+   direccionLocal.sin_family = AF_INET;
+   direccionLocal.sin_addr.s_addr = INADDR_ANY;
+   direccionLocal.sin_port = htons(puerto);
+
+   bind(s, (struct sockaddr *)&direccionLocal, sizeof(direccionLocal));
+}
+
+SocketDatagrama::~SocketDatagrama(){
+	close(s);
+}
+
+int SocketDatagrama::recibe(PaqueteDatagrama &paquete){
+	char datos[paquete.obtieneLongitud()];
+   char aux[INET_ADDRSTRLEN];
+   socklen_t clilen = sizeof(direccionForanea);
+   int i = recvfrom(s, datos, paquete.obtieneLongitud(), 0, (struct sockaddr *) &direccionForanea, &clilen);
+   inet_ntop(AF_INET, &(direccionForanea.sin_addr), aux, INET_ADDRSTRLEN);
+   paquete.inicializaPuerto(ntohs(direccionForanea.sin_port));
+   paquete.inicializaIp(aux);
+   paquete.inicializaDatos(datos);
+	return i; 
+}
+
+int SocketDatagrama::envia(PaqueteDatagrama &paquete){
+   bzero((char *)&direccionForanea, sizeof(direccionForanea));
+   direccionForanea.sin_family = AF_INET;
+   direccionForanea.sin_addr.s_addr = inet_addr(paquete.obtieneDireccion());
+   direccionForanea.sin_port = htons(paquete.obtienePuerto());
+	
+	return sendto(s, paquete.obtieneDatos(), paquete.obtieneLongitud(), 0, (struct sockaddr *) &direccionForanea, sizeof(direccionForanea));
+}
+
+**********************************
+SocketDatagrama.h
+**********************************
+
+#define SOCKET_DATAGRAMA_H_
+
+#include "PaqueteDatagrama.h"
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <string.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <stdio.h>
+#include <string>
+#include <unistd.h>
+#include <iostream>
+#include <pthread.h>
+
+class SocketDatagrama
+{
+public:
+	SocketDatagrama(int);
+	~SocketDatagrama();
+	//Recibe un paquete tipo datagrama proveniente de este socket
+	int recibe(PaqueteDatagrama & paquete);
+	//Envia un paquete tipo datagrama desde este socket 
+	int envia(PaqueteDatagrama & paquete);
+private:
+	struct sockaddr_in direccionLocal;
+	struct sockaddr_in direccionForanea;
+	int s; //ID socket
+};
+
+**********************************
+Makefile
+**********************************
+
+Cliente_Recibe: Cliente.cpp PaqueteDatagrama.o SocketDatagrama.o
+	g++ Cliente.cpp PaqueteDatagrama.o SocketDatagrama.o -pthread -o Cliente_Recibe
+SocketDatagrama.o: SocketDatagrama.cpp PaqueteDatagrama.o SocketDatagrama.h
+	g++ SocketDatagrama.cpp -c
+PaqueteDatagrama.o: PaqueteDatagrama.cpp PaqueteDatagrama.h
+	g++ PaqueteDatagrama.cpp -c
