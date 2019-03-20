@@ -2,29 +2,43 @@
 
 using namespace std;
 
-#define MAX_HILOS 3
+#define puerto1 4300
+#define puerto2 4400
+#define puerto3 4500
 
 PaqueteDatagrama enviarDat(char* valor,int puerto){
     return PaqueteDatagrama(valor, sizeof(int),"127.0.0.1", puerto);
 }
 
-void * enviar(void * arg){
+int main(int argc, char const *argv[]){
 
-    int *argumento = (int *) arg;
+  SocketDatagrama socket1 = SocketDatagrama(puerto1);
+  SocketDatagrama socket2 = SocketDatagrama(puerto2);
+  SocketDatagrama socket3 = SocketDatagrama(puerto3);
 
-    SocketDatagrama socket = SocketDatagrama(*argumento);
-    unsigned int num[1];
-    num[0] = 829789;
-    //num[0] = 4294967295; //Es divisible por 3
+  unsigned int num[3];
+  
+  //se divide el numero
+  
 
-    int cont=0;
 
-    PaqueteDatagrama datagramaEnvia = enviarDat((char*)num,*argumento);
-    socket.envia(datagramaEnvia);
+  num[2] = 829789;
 
+  //num[0] = 4294967295; //Es divisible por 3
+
+  int cont=0;
+
+  PaqueteDatagrama datagramaEnvia = enviarDat((char*)num,puerto1);
+  socket.envia(datagramaEnvia);
+  PaqueteDatagrama datagramaEnvia = enviarDat((char*)num,puerto2);
+  socket.envia(datagramaEnvia);
+  PaqueteDatagrama datagramaEnvia = enviarDat((char*)num,puerto3);
+  socket.envia(datagramaEnvia);
+
+  for(int i=0;i<3;i++){
     PaqueteDatagrama datagramaRecibe =  PaqueteDatagrama(sizeof(int));
     socket.recibe(datagramaRecibe);
-
+    
     int * respuesta = (int*)datagramaRecibe.obtieneDatos();
     int resp = *respuesta;
 
@@ -34,36 +48,7 @@ void * enviar(void * arg){
       cout << "Respuesta del servidor (" << datagramaRecibe.obtienePuerto() << "): Es primo" << endl;
     }
     
-
-    sleep(5);
-    //pthread_exit(0);
-
-}
-
-int main(int argc, char const *argv[]){
-
-  int puerto[3];
-  
-  puerto[0] = 7300;
-  puerto[1] = 7400;
-  puerto[2] = 7500;
-
-  SocketDatagrama socket1 = SocketDatagrama(puerto[0]);
-  SocketDatagrama socket2 = SocketDatagrama(puerto[1]);
-  SocketDatagrama socket3 = SocketDatagrama(puerto[2]);
-
-  int i;
-  pthread_attr_t atributos;
-  pthread_t thid[MAX_HILOS];
-
-  pthread_attr_init(&atributos);
-  pthread_attr_setdetachstate(&atributos,PTHREAD_CREATE_DETACHED);
-
-  pthread_create(&thid[0],&atributos,enviar,&puerto[0]);
-  pthread_create(&thid[1],&atributos,enviar,&puerto[1]);
-  pthread_create(&thid[2],&atributos,enviar,&puerto[2]);
-
-  sleep(1000);
+  }
 
   return 0;
 }
