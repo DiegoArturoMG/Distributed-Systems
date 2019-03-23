@@ -47,7 +47,7 @@ void * enviar(void * arg){
 }
 
 void imprimirPaquetesPerdidos(int * paquetesP, int cant, long n){
-    cout << "Pauqetes perdidos: " << cant << endl;
+    cout << "Paquetes perdidos: " << cant << endl;
     for(int i=0;i<cant;i++){
         cout << *paquetesP++ << endl;
     }

@@ -8,18 +8,18 @@ int main(int argc, char const *argv[]){
 
 	cout << argumento << endl;
 	SocketDatagrama socket = SocketDatagrama(argumento);
-    int * numeros;
+    unsigned int * numeros;
     
     while(1){
     	PaqueteDatagrama datagrama = PaqueteDatagrama( 3 * sizeof(int));
 	    socket.recibe(datagrama);
-	    numeros = (int *) datagrama.obtieneDatos();
+	    numeros = (unsigned int *) datagrama.obtieneDatos();
 	    
 	    int valInicial = *numeros;
 	    numeros++;
 		int valFinal = *numeros;
 		numeros++;
-		int n = *numeros;
+		unsigned int n = *numeros;
 
 		cout << "Valor Inicial: " << valInicial << endl;
 		cout << "Valor Final: " << valFinal << endl;

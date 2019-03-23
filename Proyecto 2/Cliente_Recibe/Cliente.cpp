@@ -4,10 +4,48 @@ using namespace std;
 
 #define puerto 7300
 #define puerto2 7400
-#define MAX_HILOS 2
+#define MAX_HILOS 1
 
 PaqueteDatagrama enviarDat(char* valor){
     return PaqueteDatagrama(valor, sizeof(int),"127.0.0.1", puerto2);
+}
+
+void * enviar(void * arg){
+    //cout << "Se crea hilo enviar" << endl;
+    char *argumento = (char *) arg;
+    int *packPerdidos = (int *)argumento;
+    int val_inicial = *packPerdidos;
+    //cout << "-->" << *packPerdidos << endl;
+    packPerdidos = packPerdidos+1;
+    int val_final = *packPerdidos;
+    //cout << "-->" << (*packPerdidos) << endl;
+
+    SocketDatagrama socket = SocketDatagrama(puerto);
+    //Se crea for para enviar cada paquete
+    int numeros[1];
+    for(int i=val_inicial;i<val_final;i++){
+        numeros[0] = i;
+        //cout << "->>> Se envia paquete" << endl;
+        PaqueteDatagrama datagramaEnvia = enviarDat((char*)numeros);
+        socket.envia(datagramaEnvia);
+    }
+    pthread_exit(0);
+}
+
+void creacionDeHiloEnviar(int *paqPerdidos){
+        
+    int paquetesPerdidos[2];
+    paquetesPerdidos[0] = *paqPerdidos;
+    paqPerdidos = paqPerdidos+1;
+    paquetesPerdidos[1] = *paqPerdidos;
+
+    //Creacion del hilo
+    //cout << "Se crea hilo" << endl;
+    pthread_attr_t atributos;
+    pthread_t thid[1];
+    pthread_attr_init(&atributos);
+    pthread_attr_setdetachstate(&atributos,PTHREAD_CREATE_DETACHED);
+    pthread_create(&thid[0],&atributos,enviar,paquetesPerdidos);
 }
 
 void * recibir(void *){
@@ -41,13 +79,17 @@ void * recibir(void *){
             //cout << "Se recibio: " << *respuesta << endl;
 
             //Se debe calcular grupo de paquetes que no estan llegando
-            for(int i=identificador;i<(*respuesta);i++){
-                val[0] = i;
-                identificador = (*respuesta+1);
-                PaqueteDatagrama datagramaEnvia = enviarDat((char*)val);
-                socket.envia(datagramaEnvia);
-                //cout << "Se ha regresado paquete fallido" << endl;
-            }
+            int paquetesPerdidos[2];
+            paquetesPerdidos[0] = identificador;
+            paquetesPerdidos[1] = *respuesta;
+
+            identificador = (*respuesta+1);
+
+            creacionDeHiloEnviar(paquetesPerdidos);
+
+            //PaqueteDatagrama datagramaEnvia = enviarDat((char*)val);
+            //socket.envia(datagramaEnvia);
+            //cout << "Se ha regresado paquete fallido" << endl;
 
         }
 
