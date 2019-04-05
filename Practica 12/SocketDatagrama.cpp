@@ -4,8 +4,8 @@ using namespace std;
 
 SocketDatagrama::SocketDatagrama(int puerto, struct timeval timeout){
    timeoutSocket = timeout;
+   s = socket(AF_INET, SOCK_DGRAM, 0);
 	setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeoutSocket, sizeof(timeoutSocket));
-   //s = socket(AF_INET, SOCK_DGRAM, 0);
    bzero((char *)&direccionLocal, sizeof(direccionLocal));
    direccionLocal.sin_family = AF_INET;
    direccionLocal.sin_addr.s_addr = INADDR_ANY;

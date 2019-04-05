@@ -22,7 +22,7 @@ public:
 	SocketDatagrama(int, struct timeval);
 	~SocketDatagrama();
 	//Recibe un paquete tipo datagrama proveniente de este socket
-	int recibe(PaqueteDatagrama & paquete);
+	//int recibe(PaqueteDatagrama & paquete);
 	//Envia un paquete tipo datagrama desde este socket 
 	int envia(PaqueteDatagrama & paquete);
 	//Recibe un paquete tipo datagrama proveniente de este socket con timeout
