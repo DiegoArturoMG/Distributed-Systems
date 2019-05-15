@@ -1,0 +1,6 @@
+Cliente:  Cliente.o gfxModified.o PaqueteDatagrama.o SocketDatagrama.o
+	g++ -std=c++11 Cliente.o gfxModified.o PaqueteDatagrama.o SocketDatagrama.o -o Cliente -lX11
+Cliente.o: Cliente.cpp gfxModified.o
+	g++ -std=c++11 Cliente.cpp -c
+gfxModified.o: gfxModified.c gfxModified.h
+	gcc gfxModified.c -c
